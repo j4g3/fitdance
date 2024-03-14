@@ -4,7 +4,7 @@ import { Form } from "../../components/Form";
 export const NewUser = () => {
   return (
     <Container active="new-user">
-      <Form isNewUser={false}/>
+      <Form isNewUser={true}/>
     </Container>
   );
 };

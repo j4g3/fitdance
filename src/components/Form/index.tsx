@@ -9,6 +9,7 @@ export const Form = ({
   userData?: UserInfo;
   isNewUser?: boolean;
 }) => {
+  const [isActive, setIsActive] = useState(userData?.isActive ?? false)
   const [data, setData] = useState<{
     name: string;
     cpf: string;
@@ -21,7 +22,7 @@ export const Form = ({
           cpf: userData.cpf,
           email: userData.email,
           name: userData.name,
-          birthDay: userData.birthDate as unknown as string,
+          birthDay: userData.birthDate.toISOString().split("T")[0],
           password: userData.password,
         }
       : {
@@ -59,6 +60,61 @@ export const Form = ({
         user: { ...data, birthDate: data.birthDay as unknown as Date },
       });
     }
+
+    await Swal.fire({
+      title: "Usuário criado com sucesso",
+      icon: "success",
+    });
+
+    window.location.href = ("/")
+  };
+
+  const activeAndDeactiveUser = async (userId: number) => {
+    if (isActive) {
+      const { value, isConfirmed } = await Swal.fire({
+        title: "Deseja realmente inativar este usuário?",
+        icon: "warning",
+        confirmButtonText: "Desejo inativar",
+        focusCancel: true,
+        showCancelButton: true,
+        cancelButtonText: "Cancelar",
+        inputLabel: "Motivo",
+        input: "text",
+      });
+
+      if (value || isConfirmed) {
+        await api.inactivateUser({ userId, reason: value });
+        if(!!userData){
+          setIsActive(false)
+        }
+      }
+    } else {
+      await api.activateUser({ userId });
+      if(!!userData){
+        setIsActive(true)
+      }
+    }
+  };
+
+  const deleteUser = async (userId: number) => {
+    const { value, isConfirmed } = await Swal.fire({
+      title: "Deseja realmente deletar este usuário?",
+      icon: "warning",
+      confirmButtonText: "Desejo deletar",
+      focusCancel: true,
+      showCancelButton: true,
+      cancelButtonText: "Cancelar",
+    });
+
+    if (isConfirmed) {
+      await api.deleteUser({ userId });
+      await Swal.fire({
+        title: "Usuário deletado com sucesso",
+        icon: "success",
+      });
+  
+      window.location.href = ("/")
+    }
   };
 
   return (
@@ -82,20 +138,23 @@ export const Form = ({
             }}
           />
         </div>
-        {!isNewUser && (
+        {!isNewUser && !!userData && (
           <div style={{ width: "100%", flexDirection: "column" }}>
             <span
               style={{
                 fontSize: 20,
-                background: "#A63838",
+                background: isActive ?"#6D9F60":"#A63838",
                 padding: "10px 20px 10px 20px",
                 textDecoration: "none",
                 color: "white",
                 cursor: "pointer",
                 userSelect: "none",
               }}
+              onClick={()=>{
+                activeAndDeactiveUser(userData.id)
+              }}
             >
-              Inativo
+              {isActive?"Ativo":"Inativo"}
             </span>
           </div>
         )}
@@ -143,6 +202,7 @@ export const Form = ({
         <div style={{ width: "100%", flexDirection: "column" }}>
           <label htmlFor="">Data de Nascimento</label>
           <br />
+          
           <input
             type="date"
             style={{ width: "30%" }}
@@ -167,6 +227,7 @@ export const Form = ({
           <input
             style={{ width: "70%" }}
             value={data.password}
+            type="password"
             onChange={(e) => {
               updateField("password", e.target.value);
             }}
@@ -190,7 +251,7 @@ export const Form = ({
           >
             Salvar
           </span>
-          {!isNewUser && (
+          {!isNewUser && !!userData && (
             <span
               style={{
                 fontSize: 20,
@@ -200,6 +261,9 @@ export const Form = ({
                 color: "white",
                 cursor: "pointer",
                 userSelect: "none",
+              }}
+              onClick={()=>{
+                deleteUser(userData.id)
               }}
             >
               Excluir

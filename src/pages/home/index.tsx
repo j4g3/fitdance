@@ -100,7 +100,13 @@ export const Home = () => {
                       }
                     }}
                   />
-                  <EditIcon fill="#000" style={{ cursor: "pointer" }} />
+                  <EditIcon
+                    fill="#000"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      window.location.href = "/details" + "?id=" + item.id;
+                    }}
+                  />
                 </div>
               </td>
             </TableRow>
